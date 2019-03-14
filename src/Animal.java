@@ -2,7 +2,7 @@ import java.util.List;
 
 /**
  * A class representing shared characteristics of animals.
- * 
+ *
  * @author David J. Barnes and Michael Kölling
  * @version 2011.07.31
  */
@@ -14,11 +14,14 @@ public abstract class Animal
     private Field field;
     // The animal's position in the field.
     private Location location;
-    
+
+    // The animal's age
+    private int age;
+
     /**
      * Create a new animal at location in field.
-     * 
-     * @param field The field currently occupied.
+     *
+     * @param field    The field currently occupied.
      * @param location The location within the field.
      */
     public Animal(Field field, Location location)
@@ -27,16 +30,46 @@ public abstract class Animal
         this.field = field;
         setLocation(location);
     }
-    
+
+    /**
+     * Sets the animal's age
+     *
+     * @param int age
+     */
+    protected void setAge(int age)
+    {
+        this.age = age;
+    }
+
+    /**
+     * Returns the animal's age
+     *
+     * @return int age
+     */
+    protected int getAge()
+    {
+        return this.age;
+    }
+
+    /**
+     * Increments the animal's age
+     */
+    protected void incrementAge()
+    {
+        this.age++;
+    }
+
     /**
      * Make this animal act - that is: make it do
      * whatever it wants/needs to do.
+     *
      * @param newAnimals A list to receive newly born animals.
      */
     abstract public void act(List<Animal> newAnimals);
 
     /**
      * Check whether the animal is alive or not.
+     *
      * @return true if the animal is still alive.
      */
     protected boolean isAlive()
@@ -51,7 +84,7 @@ public abstract class Animal
     protected void setDead()
     {
         alive = false;
-        if(location != null) {
+        if (location != null) {
             field.clear(location);
             location = null;
             field = null;
@@ -60,28 +93,43 @@ public abstract class Animal
 
     /**
      * Return the animal's location.
+     *
      * @return The animal's location.
      */
     protected Location getLocation()
     {
         return location;
     }
-    
+
     /**
      * Place the animal at the new location in the given field.
+     *
      * @param newLocation The animal's new location.
      */
     protected void setLocation(Location newLocation)
     {
-        if(location != null) {
+        if (location != null) {
             field.clear(location);
         }
         location = newLocation;
         field.place(this, newLocation);
     }
-    
+
+    /**
+     * Returns the breeding age of a specific specie
+     *
+     * @return int
+     */
+    abstract protected int getBreedingAge();
+
+    protected Boolean canBreed()
+    {
+        return this.getAge() >= this.getBreedingAge();
+    }
+
     /**
      * Return the animal's field.
+     *
      * @return The animal's field.
      */
     protected Field getField()

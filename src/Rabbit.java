@@ -24,9 +24,6 @@ public class Rabbit extends Animal
     private static final Random rand = Randomizer.getRandom();
     
     // Individual characteristics (instance fields).
-    
-    // The rabbit's age.
-    private int age;
 
     /**
      * Create a new rabbit. A rabbit may be created with age
@@ -39,9 +36,8 @@ public class Rabbit extends Animal
     public Rabbit(boolean randomAge, Field field, Location location)
     {
         super(field, location);
-        age = 0;
         if(randomAge) {
-            age = rand.nextInt(MAX_AGE);
+            super.setAge(rand.nextInt(MAX_AGE));
         }
     }
     
@@ -71,10 +67,10 @@ public class Rabbit extends Animal
      * Increase the age.
      * This could result in the rabbit's death.
      */
-    private void incrementAge()
+    protected void incrementAge()
     {
-        age++;
-        if(age > MAX_AGE) {
+        super.incrementAge();
+        if(this.getAge() > MAX_AGE) {
             setDead();
         }
     }
@@ -113,11 +109,12 @@ public class Rabbit extends Animal
     }
 
     /**
-     * A rabbit can breed if it has reached the breeding age.
-     * @return true if the rabbit can breed, false otherwise.
+     * Returns the rabbit's breeding age
+     *
+     * @return int BREEDING_AGE
      */
-    private boolean canBreed()
+    protected int getBreedingAge()
     {
-        return age >= BREEDING_AGE;
+        return BREEDING_AGE;
     }
 }
