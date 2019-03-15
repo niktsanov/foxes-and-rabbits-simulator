@@ -8,6 +8,6 @@ public class FnRMain
      */
     public static void main(String[] args)
     {
-        SimulatorView sw = new SimulatorView(100, 100);
+        new SimulatorView();
     }
 }

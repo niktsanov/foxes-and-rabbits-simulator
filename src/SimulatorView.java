@@ -17,27 +17,40 @@ import javax.swing.Timer;
  */
 public class SimulatorView extends JFrame implements ActionListener
 {
+    // The default width for the grid.
+    private static final int DEFAULT_WIDTH = 120;
+    // The default depth of the grid.
+    private static final int DEFAULT_HEIGHT = 80;
     // Colors used for empty locations.
     private static final Color EMPTY_COLOR = Color.white;
-
     // Color used for objects that have no defined color.
     private static final Color UNKNOWN_COLOR = Color.gray;
+
+    // The current height of the window
+    private int height;
+    // The current width of the window
+    private int width;
 
     private final String STEP_PREFIX = "Step: ";
     private final String POPULATION_PREFIX = "Population: ";
     private JLabel stepLabel, population;
+    private JButton runButton, stopButton, resetButton, quitButton;
     private FieldView fieldView;
 
     // A map for storing colors for participants in the simulation
     private Map<Class, Color> colors;
     // A statistics object computing and storing simulation information
     private FieldStats stats;
-
+    // The simulator that populates the data
     private Simulator simulator;
 
-    private int height;
+    private Timer simTimer;
 
-    private int width;
+    public SimulatorView()
+    {
+        this(DEFAULT_HEIGHT, DEFAULT_WIDTH);
+    }
+
     /**
      * Create a view of the given width and height.
      *
@@ -46,43 +59,121 @@ public class SimulatorView extends JFrame implements ActionListener
      */
     public SimulatorView(int height, int width)
     {
-        this.simulator = new Simulator(height, width);
-        Timer simTimer = new Timer(30, this);
+        if (height <= 0 || width <= 0) {
+            System.out.println("The dimensions must be greater than zero.");
+            System.out.println("Using default values.");
+            this.height = DEFAULT_HEIGHT;
+            this.width = DEFAULT_WIDTH;
+        } else {
+            this.height = height;
+            this.width = width;
+        }
 
-        stats = new FieldStats();
-        colors = new LinkedHashMap<Class, Color>();
+        this.simulator = new Simulator(this.height, this.width);
+        simTimer = new Timer(30, e -> {
+            if (this.isViable(this.simulator.getField())) {
+                this.simulator.simulateOneStep();
+                this.showStatus(this.simulator.getStep(), this.simulator.getField());
+            }
+        });
 
-        setTitle("Fox and Rabbit Simulation");
-        stepLabel = new JLabel(STEP_PREFIX, JLabel.CENTER);
-        population = new JLabel(POPULATION_PREFIX, JLabel.CENTER);
-
-        setLocation(100, 50);
-
-        fieldView = new FieldView(height, width);
-
-        Container contents = getContentPane();
-        contents.add(stepLabel, BorderLayout.NORTH);
-        contents.add(fieldView, BorderLayout.CENTER);
-        contents.add(population, BorderLayout.SOUTH);
-        pack();
-        setVisible(true);
-//        this.loadGUI();
-
-        this.setColor(Rabbit.class, Color.orange);
-        this.setColor(Fox.class, Color.blue);
+        this.loadGUI();
 
         // Start state
         this.showStatus(this.simulator.getStep(), this.simulator.getField());
 
-        simTimer.start();
+//        simTimer.start();
+    }
+
+    private void loadGUI()
+    {
+        stats = new FieldStats();
+        colors = new LinkedHashMap<Class, Color>();
+
+        // Set title of the window
+        setTitle("Fox and Rabbit Simulation");
+
+        // If the user hits the X on the window, it stops the program
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // The main container for the window
+        Container container = getContentPane();
+
+        // TOP PANEL
+        JPanel topPanel = new JPanel(new GridLayout(1, 1, 8, 8));
+        stepLabel = new JLabel(STEP_PREFIX, SwingConstants.LEFT);
+        topPanel.add(stepLabel, SwingConstants.CENTER);
+
+        population = new JLabel(POPULATION_PREFIX, SwingConstants.RIGHT);
+        topPanel.add(population);
+        topPanel.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+
+        // MIDDLE PANEL
+        JPanel middlePanel = new JPanel();
+        fieldView = new FieldView(this.height, this.width);
+        middlePanel.add(fieldView, BorderLayout.CENTER);
+
+        // BOTTOM PANEL
+        JPanel bottomPanel = new JPanel(new GridLayout(1, 4));
+
+        this.runButton = new JButton("Run");
+        bottomPanel.add(this.runButton);
+        this.runButton.addActionListener(this);
+
+        this.stopButton = new JButton("Stop");
+        bottomPanel.add(this.stopButton);
+        this.stopButton.addActionListener(this);
+        this.stopButton.setEnabled(false);
+
+        this.resetButton = new JButton("Reset");
+        bottomPanel.add(this.resetButton);
+        this.resetButton.addActionListener(this);
+
+        this.quitButton = new JButton("Quit");
+        bottomPanel.add(this.quitButton);
+        this.quitButton.addActionListener(this);
+
+        // Bind everything to the container
+        container.add(topPanel, BorderLayout.PAGE_START);
+        container.add(middlePanel, BorderLayout.CENTER);
+        container.add(bottomPanel, BorderLayout.PAGE_END);
+
+        // Fit all elements on the window
+        pack();
+        // Set the window not to be resizable
+        setResizable(false);
+        // Show the window in the middle of the screen, it is more user friendly
+        setLocationRelativeTo(null);
+        // Set the window to be visible
+        setVisible(true);
+
+        this.setColor(Rabbit.class, Color.orange);
+        this.setColor(Fox.class, Color.blue);
     }
 
     public void actionPerformed(ActionEvent event)
     {
-        if(this.isViable(this.simulator.getField())) {
-            this.simulator.simulateOneStep();
+        if (event.getSource() == this.quitButton) {
+            dispose();
+            System.exit(0);
+        } else if (event.getSource() == this.runButton){
+            this.resetButton.setEnabled(false);
+            this.runButton.setEnabled(false);
+            this.stopButton.setEnabled(true);
+
+            this.simTimer.start();
+        } else if(event.getSource() == this.resetButton) {
+            this.simTimer.stop();
+            this.simulator.reset();
             this.showStatus(this.simulator.getStep(), this.simulator.getField());
+        } else if (event.getSource() == this.stopButton) {
+            this.resetButton.setEnabled(true);
+            this.runButton.setEnabled(true);
+            this.stopButton.setEnabled(false);
+
+            this.simTimer.stop();
         }
+
     }
 
     /**
