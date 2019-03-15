@@ -1,1 +1,2 @@
-# fnr-exemption-project
+# Foxes & Rabbits Simulation
+The purpose of the original foxes-and-rabbits system is to simulate interactions between foxes and rabbits within a certain area(window). The main interactions consist of rabbits being eaten by foxes, therefore foxes are considered “predator” and rabbits as “pray”. Moreover, the different animals have different age to which they can live and if they die, they are removed from the simulation. Foxes and rabbits can breed and give birth, however, they need to have a certain age, to begin breeding. Both of the animals have a limit of births and have a different probability of breeding. Apart from death caused by age, the foxes can die when their hunger value goes down, so they need to consume rabbits to stay alive.
