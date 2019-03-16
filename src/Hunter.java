@@ -3,52 +3,53 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * A simple model of a fox.
+ * A simple model of a hunter.
  * Foxes age, move, eat rabbits, and die.
  *
  * @author David J. Barnes and Michael Kölling
  * @version 2011.07.31
  */
-public class Wolf extends Organism
+public class Hunter extends Organism
 {
-    // Characteristics shared by all wolves (class variables).
+    // Characteristics shared by all hunteres (class variables).
 
-    // The max strength for a wolf
+    // The max strength for a hunter
     private static final int MAX_STRENGTH = 100;
-    // How much a wolf can eat
+    // The max food level for a hunter
     private static final int MAX_FOOD_LEVEL = 12;
-    // The age at which a wolf can start to breed.
-    private static final int BREEDING_AGE = 35;
-    // The age to which a wolf can live.
-    private static final int MAX_AGE = 150;
-    // The likelihood of a wolf breeding.
-    private static final double BREEDING_PROBABILITY = 0.05;
+    // The age at which a hunter can start to breed.
+    private static final int BREEDING_AGE = 100;
+    // The age to which a hunter can live.
+    private static final int MAX_AGE = 400;
+    // The likelihood of a hunter breeding.
+    private static final double BREEDING_PROBABILITY = 0.09;
     // The maximum number of births.
-    private static final int MAX_LITTER_SIZE = 2;
+    private static final int MAX_LITTER_SIZE = 3;
 
     // A shared random number generator to control breeding.
     private static final Random rand = Randomizer.getRandom();
 
     // Individual characteristics (instance fields).
 
-    // The wolf's food level, which is increased by eating rabbits.
+    // The hunter's food level, which is increased by eating rabbits.
     private int foodLevel;
-    // The current strength of the wolf
+
     private int strengthLevel;
 
     /**
-     * Create a wolf. A wolf can be created as a new born (age zero
+     * Create a hunter. A hunter can be created as a new born (age zero
      * and not hungry) or with a random age and food level.
      *
-     * @param randomAge If true, the fox will have random age and hunger level.
+     * @param randomAge If true, the hunter will have random age and hunger level.
      * @param field     The field currently occupied.
      * @param location  The location within the field.
      */
-    public Wolf(boolean randomAge, Field field, Location location)
+    public Hunter(boolean randomAge, Field field, Location location)
     {
         super(field, location);
         if (randomAge) {
             super.setAge(rand.nextInt(MAX_AGE));
+
             this.foodLevel = rand.nextInt(MAX_FOOD_LEVEL);
             this.strengthLevel = rand.nextInt(MAX_STRENGTH);
         } else {
@@ -58,24 +59,27 @@ public class Wolf extends Organism
     }
 
     /**
-     * This is what the wolf does most of the time: it hunts for
+     * This is what the hunter does most of the time: it hunts for
      * rabbits. In the process, it might breed, die of hunger,
      * or die of old age.
      *
-     * @param newWolves A list to return newly born wolves.
+     * @param newHunter A list to return newly born hunters.
      */
-    public void act(List<Organism> newWolves)
+    public void act(List<Organism> newHunter)
     {
         incrementAge();
         incrementHunger();
         decrementStrengthLevel();
         if (isAlive()) {
-            giveBirth(newWolves);
+            giveBirth(newHunter);
             // Move towards a source of food if found.
             Location newLocation = findFood();
             if (newLocation == null) {
                 // No food found - try to move to a free location.
-                newLocation = getField().freeAdjacentLocation(getLocation());
+                // The hunter could be dead.
+                if(isAlive()) {
+                    newLocation = getField().freeAdjacentLocation(getLocation());
+                }
             }
             // See if it was possible to move.
             if (newLocation != null) {
@@ -88,7 +92,7 @@ public class Wolf extends Organism
     }
 
     /**
-     * Increase the age. This could result in the wolf's death.
+     * Increase the age. This could result in the hunter's death.
      */
     protected void incrementAge()
     {
@@ -99,7 +103,7 @@ public class Wolf extends Organism
     }
 
     /**
-     * Make this wolf more hungry. This could result in the wolf's death.
+     * Make this hunter more hungry. This could result in the hunter's death.
      */
     private void incrementHunger()
     {
@@ -132,23 +136,58 @@ public class Wolf extends Organism
         while (it.hasNext()) {
             Location where = it.next();
             Object animal = field.getObjectAt(where);
+            if (animal instanceof Wolf) {
+                Wolf wolf = (Wolf) animal;
+                if (wolf.isAlive()) {
+                    System.out.println("Wolf: " + wolf.getStrengthLevel());
+                    System.out.println("Hunter: " + this.getStrengthLevel());
 
-            if (animal instanceof Fox) {
-                Fox fox = (Fox) animal;
-                if (fox.isAlive()) {
-                    fox.setDead();
-                    this.foodLevel = MAX_FOOD_LEVEL;
-                    this.incrementStrength(3);
-                    // Remove the dead fox from the field.
-                    return where;
+                    if (this.getStrengthLevel() > wolf.getStrengthLevel()) {
+                        wolf.setDead();
+                        this.foodLevel = MAX_FOOD_LEVEL;
+                        this.incrementStrength(5);
+
+                        System.out.println("Hunter wins! \n ---");
+                        return where;
+                    } else if(this.getStrengthLevel() == wolf.getStrengthLevel()) {
+                        boolean randWin = rand.nextBoolean();
+
+                        if(randWin) {
+                            wolf.setDead();
+                            this.foodLevel = MAX_FOOD_LEVEL;
+                            this.incrementStrength(5);
+
+                            System.out.println("Hunter wins! \n ---");
+                            return where;
+                        } else {
+                            this.setDead();
+                            wolf.setFoodLevel(wolf.getMaxFoodLevel());
+
+                            System.out.println("Wolf wins! \n ---");
+                            return null;
+                        }
+
+                    } else {
+                        this.setDead();
+                        wolf.setFoodLevel(wolf.getMaxFoodLevel());
+
+                        System.out.println("Wolf wins! \n ---");
+                        return null;
+                    }
                 }
-            } else if (animal instanceof Rabbit && this.foodLevel <= 2) {
+
+            } else if (animal instanceof Rabbit) {
                 Rabbit rabbit = (Rabbit) animal;
                 if (rabbit.isAlive()) {
                     rabbit.setDead();
-                    this.foodLevel = this.foodLevel + 3;
                     this.incrementStrength(1);
-                    // Remove the dead fox from the field.
+
+                    this.foodLevel = this.foodLevel + 6;
+                    if(this.foodLevel > MAX_FOOD_LEVEL) {
+                        this.foodLevel = MAX_FOOD_LEVEL;
+                    }
+
+                    // Remove the dead rabbit from the field.
                     return where;
                 }
             }
@@ -157,22 +196,22 @@ public class Wolf extends Organism
     }
 
     /**
-     * Check whether or not this wolf is to give birth at this step.
+     * Check whether or not this hunter is to give birth at this step.
      * New births will be made into free adjacent locations.
      *
-     * @param newWolves A list to return newly born wolves.
+     * @param newFoxes A list to return newly born hunteres.
      */
-    private void giveBirth(List<Organism> newWolves)
+    private void giveBirth(List<Organism> newFoxes)
     {
-        // New wolves are born into adjacent locations.
+        // New hunteres are born into adjacent locations.
         // Get a list of adjacent free locations.
         Field field = getField();
         List<Location> free = field.getFreeAdjacentLocations(getLocation());
         int births = breed();
         for (int b = 0; b < births && free.size() > 0; b++) {
             Location loc = free.remove(0);
-            Wolf young = new Wolf(false, field, loc);
-            newWolves.add(young);
+            Hunter young = new Hunter(false, field, loc);
+            newFoxes.add(young);
         }
     }
 
@@ -192,43 +231,13 @@ public class Wolf extends Organism
     }
 
     /**
-     * Return the current strength level
+     * Return the current strengthLevel
      *
      * @return int strengthLevel
      */
     protected int getStrengthLevel()
     {
         return this.strengthLevel;
-    }
-
-    /**
-     * Return the current food level.
-     *
-     * @return int foodLevel
-     */
-    protected int getFoodLevel()
-    {
-        return this.foodLevel;
-    }
-
-    /**
-     * Set the current food level.
-     *
-     * @param foodLevel
-     */
-    protected void setFoodLevel(int foodLevel)
-    {
-        this.foodLevel = foodLevel;
-    }
-
-    /**
-     * Return max food level.
-     *
-     * @return int MAX_FOOD_LEVEL
-     */
-    protected int getMaxFoodLevel()
-    {
-        return MAX_FOOD_LEVEL;
     }
 
     /**
@@ -245,7 +254,7 @@ public class Wolf extends Organism
     }
 
     /**
-     * Returns the wolf's breeding age
+     * Returns the hunter's breeding age
      *
      * @return int BREEDING_AGE
      */

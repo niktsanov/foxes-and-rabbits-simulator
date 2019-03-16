@@ -19,7 +19,7 @@ import javax.swing.Timer;
 public class SimulatorView extends JFrame implements ActionListener
 {
     // Default speed/time of the simulation
-    private static final int DEFAULT_TIMER_DELAY = 30;
+    private static final int DEFAULT_TIMER_DELAY = 40;
     // The default width for the grid.
     private static final int DEFAULT_WIDTH = 120;
     // The default depth of the grid.
@@ -74,7 +74,7 @@ public class SimulatorView extends JFrame implements ActionListener
         }
 
         this.simulator = new Simulator(this.height, this.width);
-        simTimer = new Timer(30, this);
+        simTimer = new Timer(DEFAULT_TIMER_DELAY, this);
 
         this.loadGUI();
 
@@ -157,6 +157,7 @@ public class SimulatorView extends JFrame implements ActionListener
         this.setColor(Rabbit.class, Color.orange);
         this.setColor(Fox.class, Color.blue);
         this.setColor(Wolf.class, Color.DARK_GRAY);
+        this.setColor(Hunter.class, Color.red);
     }
 
     public void actionPerformed(ActionEvent event)
