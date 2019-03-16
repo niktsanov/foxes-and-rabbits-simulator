@@ -1,6 +1,7 @@
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.swing.Timer;
@@ -34,7 +35,8 @@ public class SimulatorView extends JFrame implements ActionListener
     private final String STEP_PREFIX = "Step: ";
     private final String POPULATION_PREFIX = "Population: ";
     private JLabel stepLabel, population;
-    private JButton runButton, stopButton, resetButton, quitButton;
+    private JButton runButton, stopButton, resetButton, quitButton, nextStepButton;
+    private JComboBox simulationSpeed;
     private FieldView fieldView;
 
     // A map for storing colors for participants in the simulation
@@ -70,19 +72,14 @@ public class SimulatorView extends JFrame implements ActionListener
         }
 
         this.simulator = new Simulator(this.height, this.width);
-        simTimer = new Timer(30, e -> {
-            if (this.isViable(this.simulator.getField())) {
-                this.simulator.simulateOneStep();
-                this.showStatus(this.simulator.getStep(), this.simulator.getField());
-            }
-        });
+        simTimer = new Timer(30, this);
 
         this.loadGUI();
 
         // Start state
         this.showStatus(this.simulator.getStep(), this.simulator.getField());
 
-//        simTimer.start();
+        //        simTimer.start();
     }
 
     private void loadGUI()
@@ -114,7 +111,13 @@ public class SimulatorView extends JFrame implements ActionListener
         middlePanel.add(fieldView, BorderLayout.CENTER);
 
         // BOTTOM PANEL
-        JPanel bottomPanel = new JPanel(new GridLayout(1, 4));
+        JPanel bottomPanel = new JPanel(new GridLayout(1, 5));
+
+        String[] speeds = {"Very Slow", "Slow", "Normal", "Fast", "Very Fast"};
+        this.simulationSpeed = new JComboBox<>(speeds);
+        this.simulationSpeed.setSelectedIndex(2);
+        bottomPanel.add(this.simulationSpeed);
+        this.simulationSpeed.addActionListener(this);
 
         this.runButton = new JButton("Run");
         bottomPanel.add(this.runButton);
@@ -128,6 +131,10 @@ public class SimulatorView extends JFrame implements ActionListener
         this.resetButton = new JButton("Reset");
         bottomPanel.add(this.resetButton);
         this.resetButton.addActionListener(this);
+
+        this.nextStepButton = new JButton("Next Step");
+        bottomPanel.add(this.nextStepButton);
+        this.nextStepButton.addActionListener(this);
 
         this.quitButton = new JButton("Quit");
         bottomPanel.add(this.quitButton);
@@ -156,13 +163,15 @@ public class SimulatorView extends JFrame implements ActionListener
         if (event.getSource() == this.quitButton) {
             dispose();
             System.exit(0);
-        } else if (event.getSource() == this.runButton){
+        } else if (event.getSource() == this.runButton) {
+            this.nextStepButton.setEnabled(false);
             this.resetButton.setEnabled(false);
             this.runButton.setEnabled(false);
             this.stopButton.setEnabled(true);
+            this.simulationSpeed.setEnabled(false);
 
             this.simTimer.start();
-        } else if(event.getSource() == this.resetButton) {
+        } else if (event.getSource() == this.resetButton) {
             this.simTimer.stop();
             this.simulator.reset();
             this.showStatus(this.simulator.getStep(), this.simulator.getField());
@@ -170,8 +179,39 @@ public class SimulatorView extends JFrame implements ActionListener
             this.resetButton.setEnabled(true);
             this.runButton.setEnabled(true);
             this.stopButton.setEnabled(false);
+            this.nextStepButton.setEnabled(true);
+            this.simulationSpeed.setEnabled(true);
 
             this.simTimer.stop();
+        } else if (event.getSource() == this.simTimer) {
+            if (this.isViable(this.simulator.getField())) {
+                this.simulator.simulateOneStep();
+                this.showStatus(this.simulator.getStep(), this.simulator.getField());
+            }
+        } else if (event.getSource() == this.nextStepButton) {
+            this.simulator.simulateOneStep();
+            this.showStatus(this.simulator.getStep(), this.simulator.getField());
+        } else if (event.getSource() == this.simulationSpeed) {
+            int currentDelay = this.simTimer.getDelay();
+
+            switch (this.simulationSpeed.getSelectedIndex()) {
+                case 0:
+                    this.simTimer.setDelay(currentDelay * 10);
+                    break;
+                case 1:
+                    this.simTimer.setDelay(currentDelay * 5);
+                    break;
+                case 3:
+                    this.simTimer.setDelay(currentDelay / 5);
+                    break;
+                case 4:
+                    this.simTimer.setDelay(currentDelay / 10);
+                    break;
+                default:
+                    this.simTimer.setDelay(30);
+                    break;
+            }
+//            System.out.println("Current delay:" + this.simTimer.getDelay());
         }
 
     }
