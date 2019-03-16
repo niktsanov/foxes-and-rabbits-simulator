@@ -18,6 +18,8 @@ import javax.swing.Timer;
  */
 public class SimulatorView extends JFrame implements ActionListener
 {
+    // Default speed/time of the simulation
+    private static final int DEFAULT_TIMER_DELAY = 30;
     // The default width for the grid.
     private static final int DEFAULT_WIDTH = 120;
     // The default depth of the grid.
@@ -78,8 +80,6 @@ public class SimulatorView extends JFrame implements ActionListener
 
         // Start state
         this.showStatus(this.simulator.getStep(), this.simulator.getField());
-
-        //        simTimer.start();
     }
 
     private void loadGUI()
@@ -156,6 +156,7 @@ public class SimulatorView extends JFrame implements ActionListener
 
         this.setColor(Rabbit.class, Color.orange);
         this.setColor(Fox.class, Color.blue);
+        this.setColor(Wolf.class, Color.DARK_GRAY);
     }
 
     public void actionPerformed(ActionEvent event)
@@ -186,32 +187,42 @@ public class SimulatorView extends JFrame implements ActionListener
         } else if (event.getSource() == this.simTimer) {
             if (this.isViable(this.simulator.getField())) {
                 this.simulator.simulateOneStep();
-                this.showStatus(this.simulator.getStep(), this.simulator.getField());
+            } else {
+                // Otherwise, stop the timer and reset
+                JOptionPane.showMessageDialog(this, "The simulation has finished. \n" + stats.getPopulationDetails(this.simulator.getField()), "Simulation Result", JOptionPane.PLAIN_MESSAGE);
+
+                this.simTimer.stop();
+                this.simulator.reset();
+                this.stopButton.setEnabled(false);
+                this.runButton.setEnabled(true);
+                this.resetButton.setEnabled(true);
+                this.nextStepButton.setEnabled(true);
+                this.simulationSpeed.setEnabled(true);
             }
+            this.showStatus(this.simulator.getStep(), this.simulator.getField());
         } else if (event.getSource() == this.nextStepButton) {
             this.simulator.simulateOneStep();
             this.showStatus(this.simulator.getStep(), this.simulator.getField());
         } else if (event.getSource() == this.simulationSpeed) {
-            int currentDelay = this.simTimer.getDelay();
 
             switch (this.simulationSpeed.getSelectedIndex()) {
                 case 0:
-                    this.simTimer.setDelay(currentDelay * 10);
+                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY * 10);
                     break;
                 case 1:
-                    this.simTimer.setDelay(currentDelay * 5);
+                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY * 2);
                     break;
                 case 3:
-                    this.simTimer.setDelay(currentDelay / 5);
+                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY / 2);
                     break;
                 case 4:
-                    this.simTimer.setDelay(currentDelay / 10);
+                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY / 10);
                     break;
                 default:
                     this.simTimer.setDelay(30);
                     break;
             }
-//            System.out.println("Current delay:" + this.simTimer.getDelay());
+            //            System.out.println("Current delay:" + this.simTimer.getDelay() + " sec");
         }
 
     }
