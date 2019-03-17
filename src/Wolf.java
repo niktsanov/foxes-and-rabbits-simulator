@@ -22,7 +22,7 @@ public class Wolf extends Organism
     // The age to which a wolf can live.
     private static final int MAX_AGE = 150;
     // The likelihood of a wolf breeding.
-    private static final double BREEDING_PROBABILITY = 0.05;
+    private static final double BREEDING_PROBABILITY = 0.07;
     // The maximum number of births.
     private static final int MAX_LITTER_SIZE = 2;
 
@@ -50,11 +50,12 @@ public class Wolf extends Organism
         if (randomAge) {
             super.setAge(rand.nextInt(MAX_AGE));
             this.foodLevel = rand.nextInt(MAX_FOOD_LEVEL);
-            this.strengthLevel = rand.nextInt(MAX_STRENGTH);
+//            this.strengthLevel = rand.nextInt(MAX_STRENGTH);
         } else {
             this.foodLevel = MAX_FOOD_LEVEL;
-            this.strengthLevel = MAX_STRENGTH;
+//            this.strengthLevel = MAX_STRENGTH;
         }
+        this.strengthLevel = rand.nextInt(MAX_STRENGTH);
     }
 
     /**
@@ -115,12 +116,13 @@ public class Wolf extends Organism
     private void decrementStrengthLevel()
     {
         this.strengthLevel--;
-        if (this.strengthLevel <= 0) this.strengthLevel = 0;
+        if (this.strengthLevel < 0) this.strengthLevel = 0;
     }
 
     /**
-     * Look for rabbits adjacent to the current location.
-     * Only the first live rabbit is eaten.
+     * Wolves attack mainly foxes, however, if they are really hungry and there is a rabbit nearby,
+     * they eat the rabbit, which increases their food levels just a bit and they get a bit of strength from
+     * that. If they kill a fox, they get full and this also increases their strength more.
      *
      * @return Where food was found, or null if it wasn't.
      */
@@ -129,30 +131,41 @@ public class Wolf extends Organism
         Field field = getField();
         List<Location> adjacent = field.adjacentLocations(getLocation());
         Iterator<Location> it = adjacent.iterator();
+
+        // Backup rabbit that will be eaten in case there are no foxes around
+        Rabbit randomRabbit = null;
+
         while (it.hasNext()) {
             Location where = it.next();
             Object animal = field.getObjectAt(where);
 
+            // The wolf first searches for a fox, if it fins one then
             if (animal instanceof Fox) {
                 Fox fox = (Fox) animal;
                 if (fox.isAlive()) {
                     fox.setDead();
                     this.foodLevel = MAX_FOOD_LEVEL;
-                    this.incrementStrength(3);
+                    this.incrementStrength(5);
                     // Remove the dead fox from the field.
                     return where;
                 }
-            } else if (animal instanceof Rabbit && this.foodLevel <= 2) {
+            } else if (animal instanceof Rabbit) {
                 Rabbit rabbit = (Rabbit) animal;
-                if (rabbit.isAlive()) {
-                    rabbit.setDead();
-                    this.foodLevel = this.foodLevel + 3;
-                    this.incrementStrength(1);
-                    // Remove the dead fox from the field.
-                    return where;
-                }
+                if (rabbit.isAlive()) randomRabbit = rabbit;
             }
         }
+
+        // If no fox was found around and the hunger level of the wolf is low, eat a rabbit if there is one.
+        if (this.getFoodLevel() <= 2 && randomRabbit != null) {
+            Location where = randomRabbit.getLocation();
+            randomRabbit.setDead();
+            this.incrementFoodLevel(4);
+            this.incrementStrength(1);
+
+            // Remove the dead rabbit from the field.
+            return where;
+        }
+
         return null;
     }
 
@@ -216,9 +229,12 @@ public class Wolf extends Organism
      *
      * @param foodLevel
      */
-    protected void setFoodLevel(int foodLevel)
+    protected void incrementFoodLevel(int foodLevel)
     {
-        this.foodLevel = foodLevel;
+        this.foodLevel = this.foodLevel + foodLevel;
+        if (this.foodLevel > MAX_FOOD_LEVEL) {
+            this.foodLevel = MAX_FOOD_LEVEL;
+        }
     }
 
     /**
@@ -239,7 +255,7 @@ public class Wolf extends Organism
     protected void incrementStrength(int level)
     {
         this.strengthLevel = this.strengthLevel + level;
-        if(this.strengthLevel > MAX_STRENGTH) {
+        if (this.strengthLevel > MAX_STRENGTH) {
             this.strengthLevel = MAX_STRENGTH;
         }
     }

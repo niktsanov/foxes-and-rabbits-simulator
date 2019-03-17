@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
@@ -11,18 +12,18 @@ import java.util.Random;
  */
 public class Hunter extends Organism
 {
-    // Characteristics shared by all hunteres (class variables).
+    // Characteristics shared by all hunters (class variables).
 
     // The max strength for a hunter
     private static final int MAX_STRENGTH = 100;
     // The max food level for a hunter
     private static final int MAX_FOOD_LEVEL = 12;
     // The age at which a hunter can start to breed.
-    private static final int BREEDING_AGE = 100;
+    private static final int BREEDING_AGE = 60;
     // The age to which a hunter can live.
     private static final int MAX_AGE = 400;
     // The likelihood of a hunter breeding.
-    private static final double BREEDING_PROBABILITY = 0.09;
+    private static final double BREEDING_PROBABILITY = 0.06;
     // The maximum number of births.
     private static final int MAX_LITTER_SIZE = 3;
 
@@ -49,13 +50,13 @@ public class Hunter extends Organism
         super(field, location);
         if (randomAge) {
             super.setAge(rand.nextInt(MAX_AGE));
-
+//            this.strengthLevel = rand.nextInt(MAX_STRENGTH);
             this.foodLevel = rand.nextInt(MAX_FOOD_LEVEL);
-            this.strengthLevel = rand.nextInt(MAX_STRENGTH);
         } else {
             this.foodLevel = MAX_FOOD_LEVEL;
-            this.strengthLevel = MAX_STRENGTH;
+//            this.strengthLevel = MAX_STRENGTH;
         }
+        this.strengthLevel = rand.nextInt(MAX_STRENGTH);
     }
 
     /**
@@ -74,12 +75,10 @@ public class Hunter extends Organism
             giveBirth(newHunter);
             // Move towards a source of food if found.
             Location newLocation = findFood();
-            if (newLocation == null) {
+            if (newLocation == null && isAlive()) {
                 // No food found - try to move to a free location.
                 // The hunter could be dead.
-                if(isAlive()) {
-                    newLocation = getField().freeAdjacentLocation(getLocation());
-                }
+                newLocation = getField().freeAdjacentLocation(getLocation());
             }
             // See if it was possible to move.
             if (newLocation != null) {
@@ -119,7 +118,7 @@ public class Hunter extends Organism
     private void decrementStrengthLevel()
     {
         this.strengthLevel--;
-        if (this.strengthLevel <= 0) this.strengthLevel = 0;
+        if (this.strengthLevel < 0) this.strengthLevel = 0;
     }
 
     /**
@@ -133,66 +132,116 @@ public class Hunter extends Organism
         Field field = getField();
         List<Location> adjacent = field.adjacentLocations(getLocation());
         Iterator<Location> it = adjacent.iterator();
+
+        Rabbit randomRabbit = null; // backup rabbit
+        ArrayList<Wolf> wolves = new ArrayList<Wolf>();
+
         while (it.hasNext()) {
             Location where = it.next();
             Object animal = field.getObjectAt(where);
+
             if (animal instanceof Wolf) {
                 Wolf wolf = (Wolf) animal;
-                if (wolf.isAlive()) {
-                    System.out.println("Wolf: " + wolf.getStrengthLevel());
-                    System.out.println("Hunter: " + this.getStrengthLevel());
-
-                    if (this.getStrengthLevel() > wolf.getStrengthLevel()) {
-                        wolf.setDead();
-                        this.foodLevel = MAX_FOOD_LEVEL;
-                        this.incrementStrength(5);
-
-                        System.out.println("Hunter wins! \n ---");
-                        return where;
-                    } else if(this.getStrengthLevel() == wolf.getStrengthLevel()) {
-                        boolean randWin = rand.nextBoolean();
-
-                        if(randWin) {
-                            wolf.setDead();
-                            this.foodLevel = MAX_FOOD_LEVEL;
-                            this.incrementStrength(5);
-
-                            System.out.println("Hunter wins! \n ---");
-                            return where;
-                        } else {
-                            this.setDead();
-                            wolf.setFoodLevel(wolf.getMaxFoodLevel());
-
-                            System.out.println("Wolf wins! \n ---");
-                            return null;
-                        }
-
-                    } else {
-                        this.setDead();
-                        wolf.setFoodLevel(wolf.getMaxFoodLevel());
-
-                        System.out.println("Wolf wins! \n ---");
-                        return null;
-                    }
-                }
-
+                if (wolf.isAlive()) wolves.add(wolf);
             } else if (animal instanceof Rabbit) {
                 Rabbit rabbit = (Rabbit) animal;
-                if (rabbit.isAlive()) {
-                    rabbit.setDead();
-                    this.incrementStrength(1);
-
-                    this.foodLevel = this.foodLevel + 6;
-                    if(this.foodLevel > MAX_FOOD_LEVEL) {
-                        this.foodLevel = MAX_FOOD_LEVEL;
-                    }
-
-                    // Remove the dead rabbit from the field.
-                    return where;
-                }
+                if (rabbit.isAlive()) randomRabbit = rabbit;
             }
         }
+
+        if (wolves.size() == 0) {
+            if (randomRabbit != null) {
+                Location where = randomRabbit.getLocation();
+
+                randomRabbit.setDead();
+                this.incrementStrength(5);
+                this.incrementFoodLevel(6);
+
+                // Remove the dead rabbit from the field.
+                return where;
+            }
+        } else if (wolves.size() > 1) {
+            int totalWolfStrength = 0;
+
+            for (Wolf wolf : wolves) {
+                totalWolfStrength += wolf.getStrengthLevel();
+            }
+
+            if (this.getStrengthLevel() >= totalWolfStrength) {
+                this.incrementStrength(10);
+                this.foodLevel = MAX_FOOD_LEVEL;
+                Location where = wolves.get(0).getLocation();
+
+                for (Wolf wolf : wolves) {
+                    wolf.setDead();
+                }
+
+                System.out.println("Hunter wins! Hunter: " + this.getStrengthLevel() + " Pack:" + totalWolfStrength);
+                return where;
+            } else {
+                System.out.println("The pack wins! Hunter: " + this.getStrengthLevel() + " Pack: " + totalWolfStrength + " \n ---");
+                for (Wolf wolf : wolves) {
+                    wolf.incrementStrength(3);
+                    wolf.incrementFoodLevel(5);
+                }
+            }
+        } else {
+            // They are in random
+            Wolf wolf = wolves.get(0);
+            Location where = wolf.getLocation();
+            System.out.println("Wolf: " + wolf.getStrengthLevel());
+            System.out.println("Hunter: " + this.getStrengthLevel());
+
+            if (this.getStrengthLevel() > wolf.getStrengthLevel()) {
+
+                wolf.setDead();
+                this.foodLevel = MAX_FOOD_LEVEL;
+                this.incrementStrength(10);
+
+                System.out.println("Hunter wins! \n ---");
+                return where;
+            } else if (this.getStrengthLevel() == wolf.getStrengthLevel()) {
+                boolean randWin = rand.nextBoolean();
+
+                if (randWin) {
+                    wolf.setDead();
+                    this.foodLevel = MAX_FOOD_LEVEL;
+                    this.incrementStrength(10);
+
+                    System.out.println("Hunter wins! \n ---");
+                    return where;
+                } else {
+                    this.setDead();
+                    wolf.incrementFoodLevel(wolf.getMaxFoodLevel());
+                    wolf.incrementStrength(3);
+
+                    System.out.println("Wolf wins! \n ---");
+                }
+
+            } else {
+                this.setDead();
+                wolf.incrementFoodLevel(wolf.getMaxFoodLevel());
+                wolf.incrementStrength(3);
+
+                System.out.println("Wolf wins! \n ---");
+            }
+        }
+
+
         return null;
+    }
+
+    /**
+     * Set the current food level.
+     *
+     * @param foodLevel
+     */
+    protected void incrementFoodLevel(int foodLevel)
+    {
+        this.foodLevel = this.foodLevel + foodLevel;
+        if (this.foodLevel > MAX_FOOD_LEVEL) {
+            this.foodLevel = MAX_FOOD_LEVEL;
+        }
     }
 
     /**
@@ -248,7 +297,7 @@ public class Hunter extends Organism
     protected void incrementStrength(int level)
     {
         this.strengthLevel = this.strengthLevel + level;
-        if(this.strengthLevel > MAX_STRENGTH) {
+        if (this.strengthLevel > MAX_STRENGTH) {
             this.strengthLevel = MAX_STRENGTH;
         }
     }

@@ -93,6 +93,20 @@ public class SimulatorView extends JFrame implements ActionListener
         // If the user hits the X on the window, it stops the program
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+//        JMenuBar menuBar = new JMenuBar();
+//        //Build the first menu.
+//        JMenu fileMenu = new JMenu("File");
+//        menuBar.add(fileMenu);
+//
+//        //a group of JMenuItems
+//        JMenuItem menuItem = new JMenuItem("Exit",
+//                KeyEvent.VK_T);
+//        menuItem.setAccelerator(KeyStroke.getKeyStroke(
+//                KeyEvent.VK_1, ActionEvent.ALT_MASK));
+//        fileMenu.add(menuItem);
+//
+//        this.setJMenuBar(menuBar);
+
         // The main container for the window
         Container container = getContentPane();
 

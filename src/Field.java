@@ -7,7 +7,7 @@ import java.util.Random;
 /**
  * Represent a rectangular grid of field positions.
  * Each position is able to store a single animal.
- * 
+ *
  * @author David J. Barnes and Michael Kölling
  * @version 2011.07.31
  */
@@ -15,7 +15,7 @@ public class Field
 {
     // A random number generator for providing random locations.
     private static final Random rand = Randomizer.getRandom();
-    
+
     // The depth and width of the field.
     private int depth, width;
     // Storage for the animals.
@@ -32,7 +32,7 @@ public class Field
         this.width = width;
         field = new Object[depth][width];
     }
-    
+
     /**
      * Empty the field.
      */
@@ -44,7 +44,7 @@ public class Field
             }
         }
     }
-    
+
     /**
      * Clear the given location.
      * @param location The location to clear.
@@ -53,7 +53,7 @@ public class Field
     {
         field[location.getRow()][location.getCol()] = null;
     }
-    
+
     /**
      * Place an animal at the given location.
      * If there is already an animal at the location it will
@@ -66,7 +66,7 @@ public class Field
     {
         place(animal, new Location(row, col));
     }
-    
+
     /**
      * Place an animal at the given location.
      * If there is already an animal at the location it will
@@ -78,7 +78,7 @@ public class Field
     {
         field[location.getRow()][location.getCol()] = animal;
     }
-    
+
     /**
      * Return the animal at the given location, if any.
      * @param location Where in the field.
@@ -88,7 +88,7 @@ public class Field
     {
         return getObjectAt(location.getRow(), location.getCol());
     }
-    
+
     /**
      * Return the animal at the given location, if any.
      * @param row The desired row.
@@ -99,7 +99,31 @@ public class Field
     {
         return field[row][col];
     }
-    
+
+    /**
+     * Return random locations of adjacent locations with organisms of a certain type
+     *
+     * @param organismClass the type of the organism
+     * @param location  the location from where we want to search
+     *
+     * @return List locations
+     */
+    public List<Location> randomAdjecentLocationsForOrganismOfType(Class organismClass, Location location)
+    {
+        List<Location> locations = new LinkedList<Location>();
+        List<Location> adjacentLocations = adjacentLocations(location);
+
+        for(Location adjacentLocation : adjacentLocations) {
+            Object organism = this.getObjectAt(adjacentLocation);
+
+            if(organismClass.isInstance(organism) && adjacentLocation != null) {
+                locations.add(adjacentLocation);
+            }
+        }
+
+        return locations;
+    }
+
     /**
      * Generate a random location that is adjacent to the
      * given location, or is the same location.
@@ -113,7 +137,7 @@ public class Field
         List<Location> adjacent = adjacentLocations(location);
         return adjacent.get(0);
     }
-    
+
     /**
      * Get a shuffled list of the free adjacent locations.
      * @param location Get locations adjacent to this.
@@ -130,7 +154,7 @@ public class Field
         }
         return free;
     }
-    
+
     /**
      * Try to find a free location that is adjacent to the
      * given location. If there is none, return null.
@@ -178,7 +202,7 @@ public class Field
                     }
                 }
             }
-            
+
             // Shuffle the list. Several other methods rely on the list
             // being in a random order.
             Collections.shuffle(locations, rand);
@@ -194,7 +218,7 @@ public class Field
     {
         return depth;
     }
-    
+
     /**
      * Return the width of the field.
      * @return The width of the field.
