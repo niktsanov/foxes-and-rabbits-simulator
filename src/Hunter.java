@@ -4,11 +4,13 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * A simple model of a hunter.
- * Foxes age, move, eat rabbits, and die.
+ * A model of a hunter.
+ * Hunters hunt wolves and feed on them. If there are no wolves around, the hunters eat rabbits to survive.
+ * They pick up fights with wolves, however, they can be defeated if they have lower strength than the opponent.
+ * If they are many wolves around a hunter, then this is considered to be a pack of wolves, so the hunter attacks the whole
+ * pack (with the combined strength of all of the wolves).
  *
- * @author David J. Barnes and Michael Kölling
- * @version 2011.07.31
+ * @author Nikolay Tsanov
  */
 public class Hunter extends Organism
 {
@@ -50,12 +52,12 @@ public class Hunter extends Organism
         super(field, location);
         if (randomAge) {
             super.setAge(rand.nextInt(MAX_AGE));
-//            this.strengthLevel = rand.nextInt(MAX_STRENGTH);
             this.foodLevel = rand.nextInt(MAX_FOOD_LEVEL);
         } else {
             this.foodLevel = MAX_FOOD_LEVEL;
-//            this.strengthLevel = MAX_STRENGTH;
         }
+
+        // Always assign random strength so the simulation can be more interesting
         this.strengthLevel = rand.nextInt(MAX_STRENGTH);
     }
 
@@ -75,6 +77,7 @@ public class Hunter extends Organism
             giveBirth(newHunter);
             // Move towards a source of food if found.
             Location newLocation = findFood();
+            // Check if the hunter is still alive, otherwise don't move.
             if (newLocation == null && isAlive()) {
                 // No food found - try to move to a free location.
                 // The hunter could be dead.
@@ -122,8 +125,8 @@ public class Hunter extends Organism
     }
 
     /**
-     * Look for rabbits adjacent to the current location.
-     * Only the first live rabbit is eaten.
+     * Search for wolves around, if so pick a fight with them, otherwise search for a rabbit to kill.
+     * If there are many wolves around the hunter, then it is considered a pack, fight with the pack.
      *
      * @return Where food was found, or null if it wasn't.
      */
@@ -149,6 +152,8 @@ public class Hunter extends Organism
             }
         }
 
+        // We check if there are any wolves around the hunter.
+        // If there are none around, then we check if there is a rabbit and kill it.
         if (wolves.size() == 0) {
             if (randomRabbit != null) {
                 Location where = randomRabbit.getLocation();
@@ -161,15 +166,21 @@ public class Hunter extends Organism
                 return where;
             }
         } else if (wolves.size() > 1) {
+            // If there are more than one, then it is considered a pack.
             int totalWolfStrength = 0;
 
+            // We get the total strength of all wolves inside the pack.
             for (Wolf wolf : wolves) {
                 totalWolfStrength += wolf.getStrengthLevel();
             }
 
+            // If the strength of the hunter is bigger or the same as the pack's strength, it kills all of the wolves
+            // and moves to one of the locations.
             if (this.getStrengthLevel() >= totalWolfStrength) {
                 this.incrementStrength(10);
                 this.foodLevel = MAX_FOOD_LEVEL;
+
+                // Since the wolves are in a random order, we just take the first one.
                 Location where = wolves.get(0).getLocation();
 
                 for (Wolf wolf : wolves) {
@@ -179,21 +190,25 @@ public class Hunter extends Organism
                 System.out.println("Hunter wins! Hunter: " + this.getStrengthLevel() + " Pack:" + totalWolfStrength);
                 return where;
             } else {
+                // Otherwise the pack wins. All of the wolves get strength and food from the fight.
                 System.out.println("The pack wins! Hunter: " + this.getStrengthLevel() + " Pack: " + totalWolfStrength + " \n ---");
+                // The hunter is killed, so he is set as dead
+                this.setDead();
+
                 for (Wolf wolf : wolves) {
                     wolf.incrementStrength(3);
                     wolf.incrementFoodLevel(5);
                 }
             }
         } else {
-            // They are in random
+            // Otherwise, there is only one wolf around the hunter.
+            // We compare their strength levels and the toughest wins.
             Wolf wolf = wolves.get(0);
             Location where = wolf.getLocation();
             System.out.println("Wolf: " + wolf.getStrengthLevel());
             System.out.println("Hunter: " + this.getStrengthLevel());
 
             if (this.getStrengthLevel() > wolf.getStrengthLevel()) {
-
                 wolf.setDead();
                 this.foodLevel = MAX_FOOD_LEVEL;
                 this.incrementStrength(10);
@@ -203,6 +218,7 @@ public class Hunter extends Organism
             } else if (this.getStrengthLevel() == wolf.getStrengthLevel()) {
                 boolean randWin = rand.nextBoolean();
 
+                // When the wolf and the hunter have the same strength levels. the victory is on random
                 if (randWin) {
                     wolf.setDead();
                     this.foodLevel = MAX_FOOD_LEVEL;
@@ -234,7 +250,7 @@ public class Hunter extends Organism
     /**
      * Set the current food level.
      *
-     * @param foodLevel
+     * @param foodLevel the amount that will be added to the foodLevel; don't exceed the max value
      */
     protected void incrementFoodLevel(int foodLevel)
     {
@@ -248,11 +264,11 @@ public class Hunter extends Organism
      * Check whether or not this hunter is to give birth at this step.
      * New births will be made into free adjacent locations.
      *
-     * @param newFoxes A list to return newly born hunteres.
+     * @param newHunters A list to return newly born hunters.
      */
-    private void giveBirth(List<Organism> newFoxes)
+    private void giveBirth(List<Organism> newHunters)
     {
-        // New hunteres are born into adjacent locations.
+        // New hunters are born into adjacent locations.
         // Get a list of adjacent free locations.
         Field field = getField();
         List<Location> free = field.getFreeAdjacentLocations(getLocation());
@@ -260,7 +276,7 @@ public class Hunter extends Organism
         for (int b = 0; b < births && free.size() > 0; b++) {
             Location loc = free.remove(0);
             Hunter young = new Hunter(false, field, loc);
-            newFoxes.add(young);
+            newHunters.add(young);
         }
     }
 
@@ -292,7 +308,7 @@ public class Hunter extends Organism
     /**
      * Increment the strength of the wolf with a value
      *
-     * @param level
+     * @param level the amount that will be added to the current strength, it doesn't exceed the max value
      */
     protected void incrementStrength(int level)
     {

@@ -17,6 +17,7 @@ public class Simulator
     private static final int DEFAULT_WIDTH = 120;
     // The default depth of the grid.
     private static final int DEFAULT_DEPTH = 80;
+
     // The probability that a rabbit will be created in any given grid position.
     private static final double RABBIT_CREATION_PROBABILITY = 0.08;
     // The probability that a fox will be created in any given grid position.
@@ -32,8 +33,6 @@ public class Simulator
     private Field field;
     // The current step of the simulation.
     private int step;
-    // A graphical view of the simulation.
-    private SimulatorView view;
 
     /**
      * Construct a simulation field with default size.
@@ -62,28 +61,6 @@ public class Simulator
         field = new Field(depth, width);
 
         reset();
-    }
-
-    /**
-     * Run the simulation from its current state for a reasonably long period,
-     * (4000 steps).
-     */
-    public void runLongSimulation()
-    {
-        simulate(4000);
-    }
-
-    /**
-     * Run the simulation from its current state for the given number of steps.
-     * Stop before the given number of steps if it ceases to be viable.
-     *
-     * @param numSteps The number of steps to run for.
-     */
-    public void simulate(int numSteps)
-    {
-        for (int step = 1; step <= numSteps && view.isViable(field); step++) {
-            simulateOneStep();
-        }
     }
 
     /**
@@ -141,7 +118,7 @@ public class Simulator
     }
 
     /**
-     * Randomly populate the field with foxes and rabbits.
+     * Randomly populate the field with foxes, rabbits, wolves and hunters.
      */
     private void populate()
     {

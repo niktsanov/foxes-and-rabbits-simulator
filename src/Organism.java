@@ -2,14 +2,13 @@ import java.util.List;
 
 /**
  * A class representing shared characteristics of organisms.
+ * Organisms could be animals, humans.
  *
  * @author David J. Barnes and Michael Kölling
  * @version 2011.07.31
  */
 public abstract class Organism
 {
-    // Whether the organism is alive or not.
-    private boolean alive;
     // The organism's field.
     private Field field;
     // The organism's position in the field.
@@ -17,6 +16,8 @@ public abstract class Organism
 
     // The organism's age
     private int age;
+    // Whether the organism is alive or not.
+    private boolean alive;
 
     /**
      * Create a new organism at location in field.
@@ -34,7 +35,7 @@ public abstract class Organism
     /**
      * Sets the organism's age
      *
-     * @param int age
+     * @param age Accepts an integer that will be set as the age of the organism
      */
     protected void setAge(int age)
     {
@@ -44,7 +45,7 @@ public abstract class Organism
     /**
      * Returns the organism's age
      *
-     * @return int age
+     * @return age Returns an integer representation of the age of the current organism
      */
     protected int getAge()
     {
@@ -122,6 +123,9 @@ public abstract class Organism
      */
     abstract protected int getBreedingAge();
 
+    /**
+     * @return whether the organism has the required age of breeding
+     */
     protected Boolean canBreed()
     {
         return this.getAge() >= this.getBreedingAge();

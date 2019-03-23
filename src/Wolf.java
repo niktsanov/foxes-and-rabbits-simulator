@@ -3,11 +3,10 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * A simple model of a fox.
- * Foxes age, move, eat rabbits, and die.
+ * A simple model of a wolf.
+ * Wolves age, move, eat mainly foxes, however if they are too hungry they eat rabbits,, and die.
  *
- * @author David J. Barnes and Michael Kölling
- * @version 2011.07.31
+ * @author Nikolay Tsanov
  */
 public class Wolf extends Organism
 {
@@ -50,10 +49,8 @@ public class Wolf extends Organism
         if (randomAge) {
             super.setAge(rand.nextInt(MAX_AGE));
             this.foodLevel = rand.nextInt(MAX_FOOD_LEVEL);
-//            this.strengthLevel = rand.nextInt(MAX_STRENGTH);
         } else {
             this.foodLevel = MAX_FOOD_LEVEL;
-//            this.strengthLevel = MAX_STRENGTH;
         }
         this.strengthLevel = rand.nextInt(MAX_STRENGTH);
     }
@@ -132,14 +129,14 @@ public class Wolf extends Organism
         List<Location> adjacent = field.adjacentLocations(getLocation());
         Iterator<Location> it = adjacent.iterator();
 
-        // Backup rabbit that will be eaten in case there are no foxes around
+        // Backup rabbit that will be eaten in case there are no foxes around and the wolf is too hungry
         Rabbit randomRabbit = null;
 
         while (it.hasNext()) {
             Location where = it.next();
             Object animal = field.getObjectAt(where);
 
-            // The wolf first searches for a fox, if it fins one then
+            // The wolf first searches for a fox in all nearby locations
             if (animal instanceof Fox) {
                 Fox fox = (Fox) animal;
                 if (fox.isAlive()) {
@@ -155,7 +152,7 @@ public class Wolf extends Organism
             }
         }
 
-        // If no fox was found around and the hunger level of the wolf is low, eat a rabbit if there is one.
+        // If no fox was found around and the hunger level of the wolf is low, then the wolf eats a rabbit if there is one.
         if (this.getFoodLevel() <= 2 && randomRabbit != null) {
             Location where = randomRabbit.getLocation();
             randomRabbit.setDead();
@@ -227,7 +224,7 @@ public class Wolf extends Organism
     /**
      * Set the current food level.
      *
-     * @param foodLevel
+     * @param foodLevel amount that is added to the food level
      */
     protected void incrementFoodLevel(int foodLevel)
     {
@@ -248,9 +245,9 @@ public class Wolf extends Organism
     }
 
     /**
-     * Increment the strength of the wolf with a value
+     * Increment the strength of the wolf, don't exceed the max value
      *
-     * @param level
+     * @param level increment with certain amount
      */
     protected void incrementStrength(int level)
     {

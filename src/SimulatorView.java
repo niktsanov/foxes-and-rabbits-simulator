@@ -19,7 +19,7 @@ import javax.swing.Timer;
 public class SimulatorView extends JFrame implements ActionListener
 {
     // Default speed/time of the simulation
-    private static final int DEFAULT_TIMER_DELAY = 40;
+    private static final int DEFAULT_TIMER_DELAY = 50;
     // The default width for the grid.
     private static final int DEFAULT_WIDTH = 120;
     // The default depth of the grid.
@@ -34,6 +34,7 @@ public class SimulatorView extends JFrame implements ActionListener
     // The current width of the window
     private int width;
 
+    // GUI related components
     private final String STEP_PREFIX = "Step: ";
     private final String POPULATION_PREFIX = "Population: ";
     private JLabel stepLabel, population;
@@ -47,7 +48,7 @@ public class SimulatorView extends JFrame implements ActionListener
     private FieldStats stats;
     // The simulator that populates the data
     private Simulator simulator;
-
+    // A timer that runs the whole simulation
     private Timer simTimer;
 
     public SimulatorView()
@@ -73,15 +74,23 @@ public class SimulatorView extends JFrame implements ActionListener
             this.width = width;
         }
 
+        // Create a new instance of the simulator class and use the height and width that was passed to the
+        // simulator view, otherwise use the default height and width.
         this.simulator = new Simulator(this.height, this.width);
+
+        // Make an instance of the Timer class; it is used for the simulation to be run one step at a time
         simTimer = new Timer(DEFAULT_TIMER_DELAY, this);
 
+        // Load all of the graphical user interface components, such as buttons, dropdown etc.
         this.loadGUI();
 
-        // Start state
+        // Draw the organisms on the grid
         this.showStatus(this.simulator.getStep(), this.simulator.getField());
     }
 
+    /**
+     * Load the graphical user interface responsible for showing interactive buttons and stats for the simulation
+     */
     private void loadGUI()
     {
         stats = new FieldStats();
@@ -90,22 +99,8 @@ public class SimulatorView extends JFrame implements ActionListener
         // Set title of the window
         setTitle("Fox and Rabbit Simulation");
 
-        // If the user hits the X on the window, it stops the program
+        // If the user hits the X on the window, it halts the program
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-//        JMenuBar menuBar = new JMenuBar();
-//        //Build the first menu.
-//        JMenu fileMenu = new JMenu("File");
-//        menuBar.add(fileMenu);
-//
-//        //a group of JMenuItems
-//        JMenuItem menuItem = new JMenuItem("Exit",
-//                KeyEvent.VK_T);
-//        menuItem.setAccelerator(KeyStroke.getKeyStroke(
-//                KeyEvent.VK_1, ActionEvent.ALT_MASK));
-//        fileMenu.add(menuItem);
-//
-//        this.setJMenuBar(menuBar);
 
         // The main container for the window
         Container container = getContentPane();
@@ -168,18 +163,35 @@ public class SimulatorView extends JFrame implements ActionListener
         // Set the window to be visible
         setVisible(true);
 
-        this.setColor(Rabbit.class, Color.orange);
-        this.setColor(Fox.class, Color.blue);
-        this.setColor(Wolf.class, Color.DARK_GRAY);
-        this.setColor(Hunter.class, Color.red);
+        // Set the colors for all organisms
+        setColorsForOrganisms();
     }
 
+    /**
+     * Set the colors for the different species that will be viewed on the grid during simulation
+     */
+    private void setColorsForOrganisms()
+    {
+        this.setColor(Rabbit.class, Color.ORANGE);
+        this.setColor(Fox.class, Color.BLUE);
+        this.setColor(Wolf.class, Color.GRAY);
+        this.setColor(Hunter.class, Color.RED);
+    }
+
+    /**
+     * A listener for events triggered by the gui components.
+     *
+     * @param event ActionEvent
+     */
     public void actionPerformed(ActionEvent event)
     {
         if (event.getSource() == this.quitButton) {
+            // Halt the program and exit
             dispose();
             System.exit(0);
         } else if (event.getSource() == this.runButton) {
+            // Run the simulation, but first disable the nextStepButton, resetButton, runButton, simulationSpeed
+            // and enable the stopButton
             this.nextStepButton.setEnabled(false);
             this.resetButton.setEnabled(false);
             this.runButton.setEnabled(false);
@@ -188,56 +200,68 @@ public class SimulatorView extends JFrame implements ActionListener
 
             this.simTimer.start();
         } else if (event.getSource() == this.resetButton) {
+            // Reset the simulation
+
             this.simTimer.stop();
             this.simulator.reset();
             this.showStatus(this.simulator.getStep(), this.simulator.getField());
         } else if (event.getSource() == this.stopButton) {
+            // Stop simulation, enable the resetButton, runButton, nextStepButton, simulationSpeed
+            // and disable the stopButton
             this.resetButton.setEnabled(true);
             this.runButton.setEnabled(true);
-            this.stopButton.setEnabled(false);
             this.nextStepButton.setEnabled(true);
             this.simulationSpeed.setEnabled(true);
+            this.stopButton.setEnabled(false);
 
             this.simTimer.stop();
         } else if (event.getSource() == this.simTimer) {
+            // Determine if the simulation should continue to run
             if (this.isViable(this.simulator.getField())) {
                 this.simulator.simulateOneStep();
             } else {
-                // Otherwise, stop the timer and reset
+                // Otherwise, stop the timer, reset and show a message with information about the population
                 JOptionPane.showMessageDialog(this, "The simulation has finished. \n" + stats.getPopulationDetails(this.simulator.getField()), "Simulation Result", JOptionPane.PLAIN_MESSAGE);
 
                 this.simTimer.stop();
                 this.simulator.reset();
+
+                // Enable the resetButton, runButton, nextStepButton, simulationSpeed
+                // and disable the stopButton
                 this.stopButton.setEnabled(false);
                 this.runButton.setEnabled(true);
                 this.resetButton.setEnabled(true);
                 this.nextStepButton.setEnabled(true);
                 this.simulationSpeed.setEnabled(true);
             }
+
+            // On every step we should redraw the grid
             this.showStatus(this.simulator.getStep(), this.simulator.getField());
         } else if (event.getSource() == this.nextStepButton) {
+            // Simulate only one step
+
             this.simulator.simulateOneStep();
             this.showStatus(this.simulator.getStep(), this.simulator.getField());
         } else if (event.getSource() == this.simulationSpeed) {
 
+            // Change the speed of the simulation
             switch (this.simulationSpeed.getSelectedIndex()) {
                 case 0:
-                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY * 10);
+                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY * 10); // make 10 times slower
                     break;
                 case 1:
-                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY * 2);
+                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY * 2); // make 2 times slower
                     break;
                 case 3:
-                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY / 2);
+                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY / 2); // make 2 times faster
                     break;
                 case 4:
-                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY / 10);
+                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY / 10); // make 10 times faster
                     break;
                 default:
-                    this.simTimer.setDelay(30);
+                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY); // set to default delay
                     break;
             }
-            //            System.out.println("Current delay:" + this.simTimer.getDelay() + " sec");
         }
 
     }
@@ -253,22 +277,22 @@ public class SimulatorView extends JFrame implements ActionListener
     }
 
     /**
-     * Define a color to be used for a given class of animal.
+     * Define a color to be used for a given class of an organism.
      *
-     * @param animalClass The animal's Class object.
-     * @param color       The color to be used for the given class.
+     * @param organismClass The organism's Class object.
+     * @param color         The color to be used for the given class.
      */
-    public void setColor(Class animalClass, Color color)
+    public void setColor(Class organismClass, Color color)
     {
-        colors.put(animalClass, color);
+        colors.put(organismClass, color);
     }
 
     /**
-     * @return The color to be used for a given class of animal.
+     * @return The color to be used for a given class of organism.
      */
-    private Color getColor(Class animalClass)
+    private Color getColor(Class organismClass)
     {
-        Color col = colors.get(animalClass);
+        Color col = colors.get(organismClass);
         if (col == null) {
             // no color defined for this class
             return UNKNOWN_COLOR;
@@ -296,10 +320,10 @@ public class SimulatorView extends JFrame implements ActionListener
 
         for (int row = 0; row < field.getDepth(); row++) {
             for (int col = 0; col < field.getWidth(); col++) {
-                Object animal = field.getObjectAt(row, col);
-                if (animal != null) {
-                    stats.incrementCount(animal.getClass());
-                    fieldView.drawMark(col, row, getColor(animal.getClass()));
+                Object organism = field.getObjectAt(row, col);
+                if (organism != null) {
+                    stats.incrementCount(organism.getClass());
+                    fieldView.drawMark(col, row, getColor(organism.getClass()));
                 } else {
                     fieldView.drawMark(col, row, EMPTY_COLOR);
                 }
