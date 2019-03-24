@@ -19,7 +19,7 @@ public class Wolf extends BattleOrganism
     // The age at which a wolf can start to breed.
     private static final int BREEDING_AGE = 35;
     // The age to which a wolf can live.
-    private static final int MAX_AGE = 150;
+    private static final int MAX_AGE = 160;
     // The likelihood of a wolf breeding.
     private static final double BREEDING_PROBABILITY = 0.07;
     // The maximum number of births.
