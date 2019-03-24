@@ -12,7 +12,7 @@ import java.util.Random;
  *
  * @author Nikolay Tsanov
  */
-public class Hunter extends Organism
+public class Hunter extends BattleOrganism
 {
     // Characteristics shared by all hunters (class variables).
 
@@ -29,15 +29,13 @@ public class Hunter extends Organism
     // The maximum number of births.
     private static final int MAX_LITTER_SIZE = 3;
 
-    // A shared random number generator to control breeding.
-    private static final Random rand = Randomizer.getRandom();
-
     // Individual characteristics (instance fields).
 
     // The hunter's food level, which is increased by eating rabbits.
     private int foodLevel;
 
-    private int strengthLevel;
+    // A shared random number generator to control breeding.
+    private static final Random rand = Randomizer.getRandom();
 
     /**
      * Create a hunter. A hunter can be created as a new born (age zero
@@ -58,7 +56,7 @@ public class Hunter extends Organism
         }
 
         // Always assign random strength so the simulation can be more interesting
-        this.strengthLevel = rand.nextInt(MAX_STRENGTH);
+        this.setStrengthLevel(rand.nextInt(this.getMaxStrengthLevel()));
     }
 
     /**
@@ -71,8 +69,8 @@ public class Hunter extends Organism
     public void act(List<Organism> newHunter)
     {
         incrementAge();
-        incrementHunger();
-        decrementStrengthLevel();
+        decrementFoodLevel();
+        decrementStrength();
         if (isAlive()) {
             giveBirth(newHunter);
             // Move towards a source of food if found.
@@ -91,37 +89,6 @@ public class Hunter extends Organism
                 setDead();
             }
         }
-    }
-
-    /**
-     * Increase the age. This could result in the hunter's death.
-     */
-    protected void incrementAge()
-    {
-        super.incrementAge();
-        if (this.getAge() > MAX_AGE) {
-            setDead();
-        }
-    }
-
-    /**
-     * Make this hunter more hungry. This could result in the hunter's death.
-     */
-    private void incrementHunger()
-    {
-        foodLevel--;
-        if (foodLevel <= 0) {
-            setDead();
-        }
-    }
-
-    /**
-     * Decrement the current strength levels
-     */
-    private void decrementStrengthLevel()
-    {
-        this.strengthLevel--;
-        if (this.strengthLevel < 0) this.strengthLevel = 0;
     }
 
     /**
@@ -248,19 +215,6 @@ public class Hunter extends Organism
     }
 
     /**
-     * Set the current food level.
-     *
-     * @param foodLevel the amount that will be added to the foodLevel; don't exceed the max value
-     */
-    protected void incrementFoodLevel(int foodLevel)
-    {
-        this.foodLevel = this.foodLevel + foodLevel;
-        if (this.foodLevel > MAX_FOOD_LEVEL) {
-            this.foodLevel = MAX_FOOD_LEVEL;
-        }
-    }
-
-    /**
      * Check whether or not this hunter is to give birth at this step.
      * New births will be made into free adjacent locations.
      *
@@ -296,35 +250,56 @@ public class Hunter extends Organism
     }
 
     /**
-     * Return the current strengthLevel
+     * Set the current food level.
      *
-     * @return int strengthLevel
+     * @param foodLevel the amount that will be added to the foodLevel; don't exceed the max value
      */
-    protected int getStrengthLevel()
+    protected void incrementFoodLevel(int foodLevel)
     {
-        return this.strengthLevel;
+        this.foodLevel = this.foodLevel + foodLevel;
+        if (this.foodLevel > MAX_FOOD_LEVEL) {
+            this.foodLevel = MAX_FOOD_LEVEL;
+        }
     }
 
     /**
-     * Increment the strength of the wolf with a value
-     *
-     * @param level the amount that will be added to the current strength, it doesn't exceed the max value
+     * Make this hunter more hungry. This could result in the hunter's death.
      */
-    protected void incrementStrength(int level)
+    private void decrementFoodLevel()
     {
-        this.strengthLevel = this.strengthLevel + level;
-        if (this.strengthLevel > MAX_STRENGTH) {
-            this.strengthLevel = MAX_STRENGTH;
+        foodLevel--;
+        if (foodLevel <= 0) {
+            setDead();
         }
+    }
+
+    /**
+     * Return the max strength level of the hunter.
+     *
+     * @return MAX_STRENGTH Representing the value that cannot be exceeded for strength
+     */
+    protected int getMaxStrengthLevel()
+    {
+        return MAX_STRENGTH;
     }
 
     /**
      * Returns the hunter's breeding age
      *
-     * @return int BREEDING_AGE
+     * @return int BREEDING_AGE Representing the value that cannot be exceeded for breeding age
      */
     protected int getBreedingAge()
     {
         return BREEDING_AGE;
+    }
+
+    /**
+     * Return the maximum age that is allowed for a hunter.
+     *
+     * @return MAX_AGE Representing the value that cannot be exceeded for age
+     */
+    protected int getMaxAge()
+    {
+        return MAX_AGE;
     }
 }

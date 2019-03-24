@@ -8,7 +8,7 @@ import java.util.Random;
  *
  * @author Nikolay Tsanov
  */
-public class Wolf extends Organism
+public class Wolf extends BattleOrganism
 {
     // Characteristics shared by all wolves (class variables).
 
@@ -25,15 +25,13 @@ public class Wolf extends Organism
     // The maximum number of births.
     private static final int MAX_LITTER_SIZE = 2;
 
-    // A shared random number generator to control breeding.
-    private static final Random rand = Randomizer.getRandom();
-
     // Individual characteristics (instance fields).
 
     // The wolf's food level, which is increased by eating rabbits.
     private int foodLevel;
-    // The current strength of the wolf
-    private int strengthLevel;
+
+    // A shared random number generator to control breeding.
+    private static final Random rand = Randomizer.getRandom();
 
     /**
      * Create a wolf. A wolf can be created as a new born (age zero
@@ -52,7 +50,8 @@ public class Wolf extends Organism
         } else {
             this.foodLevel = MAX_FOOD_LEVEL;
         }
-        this.strengthLevel = rand.nextInt(MAX_STRENGTH);
+        // Always assign random strength so the simulation can be more interesting
+        this.setStrengthLevel(rand.nextInt(this.getMaxStrengthLevel()));
     }
 
     /**
@@ -65,8 +64,8 @@ public class Wolf extends Organism
     public void act(List<Organism> newWolves)
     {
         incrementAge();
-        incrementHunger();
-        decrementStrengthLevel();
+        decrementFoodLevel();
+        decrementStrength();
         if (isAlive()) {
             giveBirth(newWolves);
             // Move towards a source of food if found.
@@ -83,37 +82,6 @@ public class Wolf extends Organism
                 setDead();
             }
         }
-    }
-
-    /**
-     * Increase the age. This could result in the wolf's death.
-     */
-    protected void incrementAge()
-    {
-        super.incrementAge();
-        if (this.getAge() > MAX_AGE) {
-            setDead();
-        }
-    }
-
-    /**
-     * Make this wolf more hungry. This could result in the wolf's death.
-     */
-    private void incrementHunger()
-    {
-        foodLevel--;
-        if (foodLevel <= 0) {
-            setDead();
-        }
-    }
-
-    /**
-     * Decrement the current strength levels
-     */
-    private void decrementStrengthLevel()
-    {
-        this.strengthLevel--;
-        if (this.strengthLevel < 0) this.strengthLevel = 0;
     }
 
     /**
@@ -153,7 +121,7 @@ public class Wolf extends Organism
         }
 
         // If no fox was found around and the hunger level of the wolf is low, then the wolf eats a rabbit if there is one.
-        if (this.getFoodLevel() <= 2 && randomRabbit != null) {
+        if (this.foodLevel <= 2 && randomRabbit != null) {
             Location where = randomRabbit.getLocation();
             randomRabbit.setDead();
             this.incrementFoodLevel(4);
@@ -202,26 +170,6 @@ public class Wolf extends Organism
     }
 
     /**
-     * Return the current strength level
-     *
-     * @return int strengthLevel
-     */
-    protected int getStrengthLevel()
-    {
-        return this.strengthLevel;
-    }
-
-    /**
-     * Return the current food level.
-     *
-     * @return int foodLevel
-     */
-    protected int getFoodLevel()
-    {
-        return this.foodLevel;
-    }
-
-    /**
      * Set the current food level.
      *
      * @param foodLevel amount that is added to the food level
@@ -235,6 +183,37 @@ public class Wolf extends Organism
     }
 
     /**
+     * Make this wolf more hungry. This could result in the wolf's death.
+     */
+    private void decrementFoodLevel()
+    {
+        foodLevel--;
+        if (foodLevel <= 0) {
+            setDead();
+        }
+    }
+
+    /**
+     * Return the max strength of the wolf
+     *
+     * @return MAX_STRENGTH an integer between 0 and 100
+     */
+    protected int getMaxStrengthLevel()
+    {
+        return MAX_STRENGTH;
+    }
+
+    /**
+     * Return the maximum allowed age for a wolf.
+     *
+     * @return MAX_AGE
+     */
+    protected int getMaxAge()
+    {
+        return MAX_AGE;
+    }
+
+    /**
      * Return max food level.
      *
      * @return int MAX_FOOD_LEVEL
@@ -242,19 +221,6 @@ public class Wolf extends Organism
     protected int getMaxFoodLevel()
     {
         return MAX_FOOD_LEVEL;
-    }
-
-    /**
-     * Increment the strength of the wolf, don't exceed the max value
-     *
-     * @param level increment with certain amount
-     */
-    protected void incrementStrength(int level)
-    {
-        this.strengthLevel = this.strengthLevel + level;
-        if (this.strengthLevel > MAX_STRENGTH) {
-            this.strengthLevel = MAX_STRENGTH;
-        }
     }
 
     /**

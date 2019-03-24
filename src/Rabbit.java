@@ -4,7 +4,7 @@ import java.util.Random;
 /**
  * A simple model of a rabbit.
  * Rabbits age, move, breed, and die.
- * 
+ *
  * @author David J. Barnes and Michael Kölling
  * @version 2011.07.31
  */
@@ -20,41 +20,42 @@ public class Rabbit extends Organism
     private static final double BREEDING_PROBABILITY = 0.12;
     // The maximum number of births.
     private static final int MAX_LITTER_SIZE = 4;
+
     // A shared random number generator to control breeding.
     private static final Random rand = Randomizer.getRandom();
-    
+
     /**
      * Create a new rabbit. A rabbit may be created with age
      * zero (a new born) or with a random age.
-     * 
+     *
      * @param randomAge If true, the rabbit will have a random age.
-     * @param field The field currently occupied.
-     * @param location The location within the field.
+     * @param field     The field currently occupied.
+     * @param location  The location within the field.
      */
     public Rabbit(boolean randomAge, Field field, Location location)
     {
         super(field, location);
-        if(randomAge) {
+        if (randomAge) {
             super.setAge(rand.nextInt(MAX_AGE));
         }
     }
-    
+
     /**
-     * This is what the rabbit does most of the time - it runs 
+     * This is what the rabbit does most of the time - it runs
      * around. Sometimes it will breed or die of old age.
+     *
      * @param newRabbits A list to return newly born rabbits.
      */
     public void act(List<Organism> newRabbits)
     {
         incrementAge();
-        if(isAlive()) {
-            giveBirth(newRabbits);            
+        if (isAlive()) {
+            giveBirth(newRabbits);
             // Try to move into a free location.
             Location newLocation = getField().freeAdjacentLocation(getLocation());
-            if(newLocation != null) {
+            if (newLocation != null) {
                 setLocation(newLocation);
-            }
-            else {
+            } else {
                 // Overcrowding.
                 setDead();
             }
@@ -62,20 +63,9 @@ public class Rabbit extends Organism
     }
 
     /**
-     * Increase the age.
-     * This could result in the rabbit's death.
-     */
-    protected void incrementAge()
-    {
-        super.incrementAge();
-        if(this.getAge() > MAX_AGE) {
-            setDead();
-        }
-    }
-    
-    /**
      * Check whether or not this rabbit is to give birth at this step.
      * New births will be made into free adjacent locations.
+     *
      * @param newRabbits A list to return newly born rabbits.
      */
     private void giveBirth(List<Organism> newRabbits)
@@ -85,25 +75,36 @@ public class Rabbit extends Organism
         Field field = getField();
         List<Location> free = field.getFreeAdjacentLocations(getLocation());
         int births = breed();
-        for(int b = 0; b < births && free.size() > 0; b++) {
+        for (int b = 0; b < births && free.size() > 0; b++) {
             Location loc = free.remove(0);
             Rabbit young = new Rabbit(false, field, loc);
             newRabbits.add(young);
         }
     }
-        
+
     /**
      * Generate a number representing the number of births,
      * if it can breed.
+     *
      * @return The number of births (may be zero).
      */
     private int breed()
     {
         int births = 0;
-        if(canBreed() && rand.nextDouble() <= BREEDING_PROBABILITY) {
+        if (canBreed() && rand.nextDouble() <= BREEDING_PROBABILITY) {
             births = rand.nextInt(MAX_LITTER_SIZE) + 1;
         }
         return births;
+    }
+
+    /**
+     * Return the maximum allowed age for a wolf.
+     *
+     * @return MAX_AGE
+     */
+    protected int getMaxAge()
+    {
+        return MAX_AGE;
     }
 
     /**

@@ -183,7 +183,7 @@ public class SimulatorView extends JFrame implements ActionListener
      *
      * @param event ActionEvent
      */
-    public void actionPerformed(ActionEvent event)
+        public void actionPerformed(ActionEvent event)
     {
         if (event.getSource() == this.quitButton) {
             // Halt the program and exit

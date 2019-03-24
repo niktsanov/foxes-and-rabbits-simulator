@@ -64,6 +64,28 @@ public class Simulator
     }
 
     /**
+     * Run the simulation from its current state for a reasonably long period,
+     * (4000 steps).
+     */
+    public void runLongSimulation()
+    {
+        simulate(4000);
+    }
+
+    /**
+     * Run the simulation from its current state for the given number of steps.
+     * The simulation will run even though there might be no organisms left.
+     *
+     * @param numSteps The number of steps to run for.
+     */
+    public void simulate(int numSteps)
+    {
+        for (int step = 1; step <= numSteps; step++) {
+            simulateOneStep();
+        }
+    }
+
+    /**
      * Run the simulation from its current state for a single step.
      * Iterate over the whole field updating the state of each
      * fox and rabbit.
@@ -135,11 +157,11 @@ public class Simulator
                     Location location = new Location(row, col);
                     Fox fox = new Fox(true, field, location);
                     organisms.add(fox);
-                } else if(rand.nextDouble() <= WOLF_CREATION_PROBABILITY) {
+                } else if (rand.nextDouble() <= WOLF_CREATION_PROBABILITY) {
                     Location location = new Location(row, col);
                     Wolf wolf = new Wolf(true, field, location);
                     organisms.add(wolf);
-                } else if(rand.nextDouble() <= HUNTER_CREATION_PROBABILITY) {
+                } else if (rand.nextDouble() <= HUNTER_CREATION_PROBABILITY) {
                     Location location = new Location(row, col);
                     Hunter hunter = new Hunter(true, field, location);
                     organisms.add(hunter);

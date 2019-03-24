@@ -24,13 +24,14 @@ public class Fox extends Organism
     // The food value of a single rabbit. In effect, this is the
     // number of steps a fox can go before it has to eat again.
     private static final int RABBIT_FOOD_VALUE = 9;
-    // A shared random number generator to control breeding.
-    private static final Random rand = Randomizer.getRandom();
 
     // Individual characteristics (instance fields).
 
     // The fox's food level, which is increased by eating rabbits.
     private int foodLevel;
+
+    // A shared random number generator to control breeding.
+    private static final Random rand = Randomizer.getRandom();
 
     /**
      * Create a fox. A fox can be created as a new born (age zero
@@ -61,7 +62,7 @@ public class Fox extends Organism
     public void act(List<Organism> newFoxes)
     {
         incrementAge();
-        incrementHunger();
+        decrementFoodLevel();
         if (isAlive()) {
             giveBirth(newFoxes);
             // Move towards a source of food if found.
@@ -77,28 +78,6 @@ public class Fox extends Organism
                 // Overcrowding.
                 setDead();
             }
-        }
-    }
-
-    /**
-     * Increase the age. This could result in the fox's death.
-     */
-    protected void incrementAge()
-    {
-        super.incrementAge();
-        if (this.getAge() > MAX_AGE) {
-            setDead();
-        }
-    }
-
-    /**
-     * Make this fox more hungry. This could result in the fox's death.
-     */
-    private void incrementHunger()
-    {
-        foodLevel--;
-        if (foodLevel <= 0) {
-            setDead();
         }
     }
 
@@ -165,6 +144,17 @@ public class Fox extends Organism
     }
 
     /**
+     * Make this fox more hungry. This could result in the fox's death.
+     */
+    private void decrementFoodLevel()
+    {
+        foodLevel--;
+        if (foodLevel <= 0) {
+            setDead();
+        }
+    }
+
+    /**
      * Returns the fox's breeding age
      *
      * @return int BREEDING_AGE
@@ -172,5 +162,15 @@ public class Fox extends Organism
     protected int getBreedingAge()
     {
         return BREEDING_AGE;
+    }
+
+    /**
+     * Return the maximum allowed age for a wolf.
+     *
+     * @return MAX_AGE
+     */
+    protected int getMaxAge()
+    {
+        return MAX_AGE;
     }
 }

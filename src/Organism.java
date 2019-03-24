@@ -58,7 +58,15 @@ public abstract class Organism
     protected void incrementAge()
     {
         this.age++;
+        if (this.age > this.getMaxAge()) {
+            this.setDead();
+        }
     }
+
+    /**
+     * @return the maximum allowed age for an organism
+     */
+    abstract protected int getMaxAge();
 
     /**
      * Make this organism act - that is: make it do
