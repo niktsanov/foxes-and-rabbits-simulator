@@ -154,7 +154,7 @@ public class Hunter extends BattleOrganism
                     wolf.setDead();
                 }
 
-                System.out.println("Hunter wins! Hunter: " + this.getStrengthLevel() + " Pack:" + totalWolfStrength);
+                System.out.println("Hunter wins! Hunter: " + this.getStrengthLevel() + " Pack:" + totalWolfStrength + " \n ---");
                 return where;
             } else {
                 // Otherwise the pack wins. All of the wolves get strength and food from the fight.
