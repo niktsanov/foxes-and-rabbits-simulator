@@ -34,6 +34,8 @@ public class Simulator
     // The current step of the simulation.
     private int step;
 
+    private boolean showRabbits = true, showFoxes = true, showWolves = true, showHunters = true;
+
     /**
      * Construct a simulation field with default size.
      */
@@ -140,6 +142,46 @@ public class Simulator
     }
 
     /**
+     * Set whether the rabbits should be shown in the simulation
+     *
+     * @param showRabbits true or false
+     */
+    public void setShowRabbits(boolean showRabbits)
+    {
+        this.showRabbits = showRabbits;
+    }
+
+    /**
+     * Set whether the foxes should be shown in the simulation
+     *
+     * @param showFoxes true or false
+     */
+    public void setShowFoxes(boolean showFoxes)
+    {
+        this.showFoxes = showFoxes;
+    }
+
+    /**
+     * Set whether the hunters should be shown in the simulation
+     *
+     * @param showHunters true or false
+     */
+    public void setShowHunters(boolean showHunters)
+    {
+        this.showHunters = showHunters;
+    }
+
+    /**
+     * Set whether the wolves should be shown in the simulation
+     *
+     * @param showWolves true or false
+     */
+    public void setShowWolves(boolean showWolves)
+    {
+        this.showWolves = showWolves;
+    }
+
+    /**
      * Randomly populate the field with foxes, rabbits, wolves and hunters.
      */
     private void populate()
@@ -149,24 +191,23 @@ public class Simulator
         for (int row = 0; row < field.getDepth(); row++) {
             for (int col = 0; col < field.getWidth(); col++) {
 
-                if (rand.nextDouble() <= RABBIT_CREATION_PROBABILITY) {
+                if (this.showRabbits && rand.nextDouble() <= RABBIT_CREATION_PROBABILITY) {
                     Location location = new Location(row, col);
                     Rabbit rabbit = new Rabbit(true, field, location);
                     organisms.add(rabbit);
-                } else if (rand.nextDouble() <= FOX_CREATION_PROBABILITY) {
+                } else if (this.showFoxes && rand.nextDouble() <= FOX_CREATION_PROBABILITY) {
                     Location location = new Location(row, col);
                     Fox fox = new Fox(true, field, location);
                     organisms.add(fox);
-                } else if (rand.nextDouble() <= WOLF_CREATION_PROBABILITY) {
+                } else if (this.showWolves && rand.nextDouble() <= WOLF_CREATION_PROBABILITY) {
                     Location location = new Location(row, col);
                     Wolf wolf = new Wolf(true, field, location);
                     organisms.add(wolf);
-                } else if (rand.nextDouble() <= HUNTER_CREATION_PROBABILITY) {
+                } else if (this.showHunters && rand.nextDouble() <= HUNTER_CREATION_PROBABILITY) {
                     Location location = new Location(row, col);
                     Hunter hunter = new Hunter(true, field, location);
                     organisms.add(hunter);
                 }
-
 
                 // else leave the location empty.
             }

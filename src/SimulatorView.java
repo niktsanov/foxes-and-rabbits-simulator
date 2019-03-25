@@ -1,7 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.swing.Timer;
@@ -102,6 +101,73 @@ public class SimulatorView extends JFrame implements ActionListener
         // If the user hits the X on the window, it halts the program
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+        JMenuBar menubar = new JMenuBar();
+        JMenu viewMenu = new JMenu("View");
+        JCheckBoxMenuItem showRabbits = new JCheckBoxMenuItem("Show Rabbits");
+        showRabbits.setSelected(true);
+        showRabbits.addItemListener((e) -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                this.simulator.setShowRabbits(true);
+            } else {
+                this.simulator.setShowRabbits(false);
+            }
+
+            this.stopSimulation();
+            this.simulator.reset();
+            this.showStatus(this.simulator.getStep(), this.simulator.getField());
+        });
+
+        JCheckBoxMenuItem showFoxes = new JCheckBoxMenuItem("Show Foxes");
+        showFoxes.setSelected(true);
+        showFoxes.addItemListener((e) -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                this.simulator.setShowFoxes(true);
+            } else {
+                this.simulator.setShowFoxes(false);
+            }
+
+            this.stopSimulation();
+            this.simulator.reset();
+            this.showStatus(this.simulator.getStep(), this.simulator.getField());
+        });
+
+        JCheckBoxMenuItem showWolves = new JCheckBoxMenuItem("Show Wolves");
+        showWolves.setSelected(true);
+        showWolves.addItemListener((e) -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                this.simulator.setShowWolves(true);
+            } else {
+                this.simulator.setShowWolves(false);
+            }
+
+            this.stopSimulation();
+            this.simulator.reset();
+            this.showStatus(this.simulator.getStep(), this.simulator.getField());
+        });
+
+        JCheckBoxMenuItem showHunters = new JCheckBoxMenuItem("Show Hunters");
+        showHunters.setSelected(true);
+        showHunters.addItemListener((e) -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                this.simulator.setShowHunters(true);
+            } else {
+                this.simulator.setShowHunters(false);
+            }
+
+            this.stopSimulation();
+            this.simulator.reset();
+            this.showStatus(this.simulator.getStep(), this.simulator.getField());
+        });
+
+        viewMenu.add(showRabbits);
+        viewMenu.add(showFoxes);
+        viewMenu.add(showWolves);
+        viewMenu.add(showHunters);
+
+        menubar.add(viewMenu);
+        setJMenuBar(menubar);
+
+
         // The main container for the window
         Container container = getContentPane();
 
@@ -183,44 +249,24 @@ public class SimulatorView extends JFrame implements ActionListener
      *
      * @param event ActionEvent
      */
-        public void actionPerformed(ActionEvent event)
+    public void actionPerformed(ActionEvent event)
     {
         if (event.getSource() == this.quitButton) {
             // Halt the program and exit
             dispose();
             System.exit(0);
         } else if (event.getSource() == this.runButton) {
-            // Run the simulation, but first disable the nextStepButton, resetButton, runButton, simulationSpeed
-            // and enable the stopButton
-            this.nextStepButton.setEnabled(false);
-            this.resetButton.setEnabled(false);
-            this.runButton.setEnabled(false);
-            this.stopButton.setEnabled(true);
-            this.simulationSpeed.setEnabled(false);
-
-            this.simTimer.start();
+            this.runSimulation();
         } else if (event.getSource() == this.resetButton) {
-            // Reset the simulation
-
-            this.simTimer.stop();
-            this.simulator.reset();
-            this.showStatus(this.simulator.getStep(), this.simulator.getField());
+            this.resetSimulation();
         } else if (event.getSource() == this.stopButton) {
-            // Stop simulation, enable the resetButton, runButton, nextStepButton, simulationSpeed
-            // and disable the stopButton
-            this.resetButton.setEnabled(true);
-            this.runButton.setEnabled(true);
-            this.nextStepButton.setEnabled(true);
-            this.simulationSpeed.setEnabled(true);
-            this.stopButton.setEnabled(false);
-
-            this.simTimer.stop();
+            this.stopSimulation();
         } else if (event.getSource() == this.simTimer) {
             // Determine if the simulation should continue to run
             if (this.isViable(this.simulator.getField())) {
                 this.simulator.simulateOneStep();
             } else {
-                // Otherwise, stop the timer, reset and show a message with information about the population
+                // Otherwise, stopSimulation the timer, reset and show a message with information about the population
                 JOptionPane.showMessageDialog(this, "The simulation has finished. \n" + stats.getPopulationDetails(this.simulator.getField()), "Simulation Result", JOptionPane.PLAIN_MESSAGE);
 
                 this.simTimer.stop();
@@ -239,31 +285,75 @@ public class SimulatorView extends JFrame implements ActionListener
             this.showStatus(this.simulator.getStep(), this.simulator.getField());
         } else if (event.getSource() == this.nextStepButton) {
             // Simulate only one step
-
             this.simulator.simulateOneStep();
             this.showStatus(this.simulator.getStep(), this.simulator.getField());
         } else if (event.getSource() == this.simulationSpeed) {
-
-            // Change the speed of the simulation
-            switch (this.simulationSpeed.getSelectedIndex()) {
-                case 0:
-                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY * 10); // make 10 times slower
-                    break;
-                case 1:
-                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY * 2); // make 2 times slower
-                    break;
-                case 3:
-                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY / 2); // make 2 times faster
-                    break;
-                case 4:
-                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY / 10); // make 10 times faster
-                    break;
-                default:
-                    this.simTimer.setDelay(DEFAULT_TIMER_DELAY); // set to default delay
-                    break;
-            }
+            this.changeSimulationSpeed();
         }
 
+    }
+
+    /**
+     * Reset the simulation and redraw positions.
+     */
+    private void resetSimulation()
+    {
+        this.simTimer.stop();
+        this.simulator.reset();
+        this.showStatus(this.simulator.getStep(), this.simulator.getField());
+    }
+
+    /**
+     * Run the simulation, but first disable the nextStepButton, resetButton, runButton,
+     * simulationSpeed and enable the stopButton
+     */
+    private void runSimulation()
+    {
+        this.nextStepButton.setEnabled(false);
+        this.resetButton.setEnabled(false);
+        this.runButton.setEnabled(false);
+        this.stopButton.setEnabled(true);
+        this.simulationSpeed.setEnabled(false);
+
+        this.simTimer.start();
+    }
+
+    /**
+     * Change the delay of the timer, which will change the simulation's speed
+     */
+    private void changeSimulationSpeed()
+    {
+        switch (this.simulationSpeed.getSelectedIndex()) {
+            case 0:
+                this.simTimer.setDelay(DEFAULT_TIMER_DELAY * 10); // make 10 times slower
+                break;
+            case 1:
+                this.simTimer.setDelay(DEFAULT_TIMER_DELAY * 2); // make 2 times slower
+                break;
+            case 3:
+                this.simTimer.setDelay(DEFAULT_TIMER_DELAY / 2); // make 2 times faster
+                break;
+            case 4:
+                this.simTimer.setDelay(DEFAULT_TIMER_DELAY / 10); // make 10 times faster
+                break;
+            default:
+                this.simTimer.setDelay(DEFAULT_TIMER_DELAY); // set to default delay
+                break;
+        }
+    }
+
+    /**
+     * Enable the buttons and stopSimulation the timer.
+     */
+    private void stopSimulation()
+    {
+        this.resetButton.setEnabled(true);
+        this.runButton.setEnabled(true);
+        this.nextStepButton.setEnabled(true);
+        this.simulationSpeed.setEnabled(true);
+        this.stopButton.setEnabled(false);
+
+        this.simTimer.stop();
     }
 
     /**
